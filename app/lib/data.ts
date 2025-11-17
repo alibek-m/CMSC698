@@ -82,3 +82,46 @@ export async function getUserById(iduser: string) {
   );
   return rows[0] ?? null;
 }
+
+// translations
+export interface translation extends RowDataPacket {
+  id: number;
+  user_id: string;
+  source_text: string;
+  translated_text: string;
+  source_lang: string | null;
+  target_lang: string;
+  created_at: Date;
+}
+
+export async function saveTranslation(
+  userId: string,
+  sourceText: string,
+  translatedText: string,
+  sourceLang: string | null,
+  targetLang: string
+) {
+  const sql = `
+    INSERT INTO translation (user_id, source_text, translated_text, source_lang, target_lang)
+    VALUES (?, ?, ?, ?, ?)
+  `;
+  await conn.query(sql, [
+    userId,
+    sourceText,
+    translatedText,
+    sourceLang,
+    targetLang.toUpperCase(),
+  ]);
+}
+
+export async function getTranslationsForUser(userId: string) {
+  const sql = `
+    SELECT id, user_id, source_text, translated_text, source_lang, target_lang, created_at
+    FROM translation
+    WHERE user_id = ?
+    ORDER BY created_at DESC
+    LIMIT 100
+  `;
+  const [rows] = await conn.query<translation[]>(sql, [userId]);
+  return rows;
+}
